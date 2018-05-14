@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+    <script src="/static/recorder.js"></script>
+    <style>
+        .box {
+            width: 300px;
+            float: left;
+            margin: 0 20px 0 20px;
+        }
+
+        .box div, .box input {
+            border: 1px solid;
+            -moz-border-radius: 4px;
+            border-radius: 4px;
+            width: 100%;
+            padding: 0px;
+            margin: 5px;
+        }
+
+        .box div {
+            border-color: grey;
+            height: 300px;
+            overflow: auto;
+        }
+
+        .box input {
+            height: 30px;
+        }
+
+        h1 {
+            margin-left: 30px;
+        }
+
+        body {
+            background-color: #F0F0F0;
+            font-family: "Arial";
+        }
+    </style>
+</head>
+<body lang="en">
+<h1>Index</h1>
+<div id="first" class="box">
+    <button onclick="startRecording()">start</button>
+    <button onclick="stopRecording()">stop</button>
+</div>
+<script>
+    window.URL = window.URL || window.webkitURL;
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+    var recorder;
+    var audio = document.querySelector('audio');
+    var websocket;
+    var text;
+    var onSuccess = function (s) {
+        var context = new AudioContext();
+        var mediaStreamSource = context.createMediaStreamSource(s);
+        recorder = new Recorder(mediaStreamSource);
+        recorder.record();
+
+        // audio loopback
+        // mediaStreamSource.connect(context.destination);
+    }
+
+
+    function startRecording() {
+        websocket = new WebSocket("ws://localhost:8080/socket");
+        websocket.onopen = function (evt) {
+            onOpen(evt)
+        };
+        websocket.onclose = function (evt) {
+            onClose()
+        };
+        websocket.onmessage = function (evt) {
+            onMessage(evt)
+        };
+        websocket.onerror = function (evt) {
+            onError(evt)
+        };
+
+        function onOpen(evt) {
+            var message = {
+                'action': 'start',
+                //'content-type': 'audio/l16;rate=22050'
+                'content-type': 'audio/wav;rate=22050'
+            };
+            websocket.send(JSON.stringify(message));
+        }
+
+        function onMessage(evt) {
+            console.log(evt.data);
+            //console.log(JSON.parse(evt.data))
+
+        }
+
+        function onError(evt) {
+            console.log(evt.data);
+            //console.log(JSON.parse(evt.data))
+        }
+
+        function onFail(evt) {
+            console.log(evt.data);
+            //console.log(JSON.parse(evt.data))
+        }
+
+
+        function onClose() {
+            websocket.close();
+        }
+
+        if (navigator.getUserMedia) {
+            navigator.getUserMedia({audio: true}, onSuccess, onFail);
+        } else {
+            console.log('navigator.getUserMedia not present');
+        }
+    }
+
+    function stopRecording() {
+        recorder.stop();
+        recorder.exportWAV(function (s) {
+            //audio.src = window.URL.createObjectURL(s);
+            websocket.send(s);
+            //websocket.onclose();
+        });
+    }
+</script>
+</body>
+</html>  

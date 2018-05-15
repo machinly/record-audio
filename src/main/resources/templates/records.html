@@ -97,8 +97,8 @@
         function onOpen(evt) {
             var message = {
                 'action': 'start',
-                'content-type': 'audio/l16;rate=22050'
-                // 'content-type': 'audio/wav;rate=22050'
+                // 'content-type': 'audio/l16;rate=22050'
+                'content-type': 'audio/wav;rate=22050'
             };
             ws.send(JSON.stringify(message));
         }

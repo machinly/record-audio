@@ -30,7 +30,7 @@ public class RecordDemoApplication {
 
         @Override
         public void addViewControllers(ViewControllerRegistry registry) {
-            registry.addViewController("/records").setViewName("/records");
+            registry.addViewController("records").setViewName("records");
         }
     }
 
